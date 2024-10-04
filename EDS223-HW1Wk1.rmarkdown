@@ -1,0 +1,112 @@
+---
+title: "EDS223-HW1"
+author: "Maddy Enda"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#running libraries
+library(tidyverse)
+library(dplyr)
+library(here)
+library(tmap)
+library(sf)
+library(stars)
+library(RColorBrewer)
+```
+
+```{r}
+# read in geodatabase of EJScreen data at the Census Block Group level
+ejscreen <- sf::st_read(here::here("data", "ejscreen","EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb")) 
+```
+
+```{r}
+# filter to a state you are interested in
+california <- ejscreen %>%
+  dplyr::filter(ST_ABBREV == "CA") 
+
+# filter to a county you are interested in
+los_angeles <- ejscreen %>%
+  dplyr::filter(CNTY_NAME %in% c("Los Angeles County"))
+
+# find the average values for all variables within counties
+california_counties <- aggregate(california, by = list(california$CNTY_NAME), FUN = mean)
+```
+
+```{r}
+#Filtering to California counties where the majority of the population is considered low income
+low_income_counties <- california_counties %>%
+  dplyr::filter(LOWINCPCT > 0.3) 
+
+```
+
+```{r}
+#Ground level ozone pollution 
+tm_shape(california_counties) +
+  tm_polygons("OZONE",
+              palette= "YlOrRd") +
+  tm_shape(low_income_counties) +
+  tm_borders(col= "darkblue",
+             alpha= 1.0) 
+```
+
+```{r}
+ozone_socal <- tm_shape(california_counties) +
+  tm_polygons("OZONE",
+              palette= "YlOrRd",
+              title= "Ozone (ppb)",
+              legend.size.is.portrait = TRUE) +
+   tm_shape(low_income_counties) +
+  tm_borders(col= "darkblue",
+             lwd= 1.2) +
+  tm_compass(position
+             = c("left", "bottom")) +
+    tm_scale_bar(position =
+                   c("left", "bottom")) 
+ozone_socal
+```
+
+```{r}
+wastewater_socal <- tm_shape(california_counties) +
+  tm_polygons("PWDIS",
+              palette= "PuBuGn",
+              title= "Wastewater ()",
+              legend.size.is.portrait = TRUE) +
+   tm_shape(low_income_counties) +
+  tm_borders(col= "darkblue",
+             lwd= 1.2) +
+  tm_compass(position
+             = c("left", "bottom")) +
+    tm_scale_bar(position =
+                   c("left", "bottom")) 
+wastewater_socal
+```
+
+```{r}
+ozone_socal +
+  tm_layout(bg.color = "darkseagreen",
+            main.title= "Ground-Level Ozone Pollution",
+main.title.size= 1.0) +
+  tm_legend( position= c("0.7", "0.7"),
+             legend.text.color= "white",
+             legend.title.color= "white")
+```
+
+```{r}
+wastewater_socal +
+  tm_layout(bg.color = "darkseagreen",
+            main.title= "Ground-Level Ozone Pollution",
+main.title.size= 1.0,
+title.position = c("center", "1.5")) +
+  tm_legend( position= c("0.7", "0.7"),
+             legend.text.color= "white",
+             legend.title.color= "white")
+```
+
+```{r}
+tm_arrange("","")
+```
+
