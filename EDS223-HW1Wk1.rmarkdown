@@ -56,7 +56,7 @@ tm_shape(california_counties) +
 ```{r}
 ozone_socal <- tm_shape(california_counties) +
   tm_polygons("OZONE",
-              palette= "YlOrRd",
+              palette= "PuBuGn",
               title= "Ozone (ppb)",
               legend.size.is.portrait = TRUE) +
    tm_shape(low_income_counties) +
@@ -70,10 +70,11 @@ ozone_socal
 ```
 
 ```{r}
-wastewater_socal <- tm_shape(california_counties) +
-  tm_polygons("PWDIS",
-              palette= "PuBuGn",
-              title= "Wastewater ()",
+cancer_socal <- tm_shape(california_counties) +
+  tm_polygons("CANCER",
+              palette= "YlOrRd",
+              title= "Probability of 
+Contracting Cancer",
               legend.size.is.portrait = TRUE) +
    tm_shape(low_income_counties) +
   tm_borders(col= "darkblue",
@@ -82,7 +83,11 @@ wastewater_socal <- tm_shape(california_counties) +
              = c("left", "bottom")) +
     tm_scale_bar(position =
                    c("left", "bottom")) 
-wastewater_socal
+```
+
+```{r}
+cancer_socal
+
 ```
 
 ```{r}
@@ -96,17 +101,16 @@ main.title.size= 1.0) +
 ```
 
 ```{r}
-wastewater_socal +
+cancer_socal +
   tm_layout(bg.color = "darkseagreen",
-            main.title= "Ground-Level Ozone Pollution",
-main.title.size= 1.0,
-title.position = c("center", "1.5")) +
+            main.title= "Threat of Cancer",
+main.title.size= 1.0) +
   tm_legend( position= c("0.7", "0.7"),
              legend.text.color= "white",
              legend.title.color= "white")
 ```
 
 ```{r}
-tm_arrange("","")
+tmap_arrange(cancer_socal, ozone_socal)
 ```
 

@@ -1,45 +1,154 @@
 ---
 title: "EDS223-HW1"
 author: "Maddy Enda"
-format: html
+date: 10/4/24
+warning: FALSE
+message: FALSE
+html:
+  toc: true 
+eval: true
 editor: visual
 editor_options: 
   chunk_output_type: console
----
 
-```{r}
+---
+# Homework Assignment 1:
+
+## Part 1:
+
+- Create a map of Easter Island using the data provided
+
+### Running our libraries and importing data
+
+```{r, echo=FALSE, message=FALSE}
 #running libraries
 library(tidyverse)
 library(dplyr)
 library(here)
 library(tmap)
+library(terra)
 library(sf)
 library(stars)
 library(RColorBrewer)
+
 ```
 
 
+```{r}
+#Loading in the data from easterisland folder
+
+# read in points on the island
+ei_points <- sf::read_sf(here::here("data","easter-island","ei_points.gpkg"))
+
+# read in the volcanoes data as a subset of points
+volcanoes <- subset(ei_points, type =="volcano")
+
+# read in island elevation
+ei_elev <- terra::rast(here::here("data","easter-island","ei_elev.tif"))
+
+# read in island border
+ei_borders <- sf::read_sf(here::here("data","easter-island","ei_border.gpkg"))
+
+# read in island road network
+ei_roads <- sf::read_sf(here::here("data","easter-island","ei_roads.gpkg"))
+
+# read in bathymetry
+ei_bathymetry <- terra::rast(here::here("data","easter-island","ei_bathy.tif"))
+
+# read in seamounts
+ei_seamounts <- sf::read_sf(here::here("data","easter-island","ei_seamounts.gpkg"))
+
+```
+
+### Setting a boundary box
 
 ```{r}
+# Creating our boundaries to include all seamount data
+bbox_seamount <- st_bbox(ei_seamounts) # seamount bounding box
+bbox_bathymetry <- st_bbox(ei_bathymetry) # bathymetry bounding box
+bbox_largest <- st_bbox(c(xmin = min(bbox_bathymetry[1], bbox_seamount[1]),
+                         ymin = min(bbox_bathymetry[2], bbox_seamount[2]),
+                         xmax = max(bbox_bathymetry[3], bbox_seamount[3]),
+                         ymax = max(bbox_bathymetry[4], bbox_seamount[4])))
+```
+
+### Making the map of Easter Island:
+
+```{r}
+tm_shape(ei_bathymetry, is.master= TRUE, bbox= bbox_largest) +
+  tm_raster(palette= c("turquoise3","lightblue1"),
+                       title= "Bathymetry (MBSL)",
+                       midpoint= NA) +
+  tm_shape(ei_borders) + 
+  tm_borders() +
+  tm_shape(ei_elev)+ 
+  tm_raster(title= "Elevation (MASL)",
+            palette = "YlGn") +
+  tm_shape(ei_roads) + 
+  tm_lines() +
+  tm_shape(volcanoes) + 
+  tm_symbols(size= .2, 
+             col= 'red', 
+             shape= 24) +
+tm_text(text ="elevation",size = .5,xmod = .65,ymod = .06) +
+  tm_shape(ei_seamounts) +
+  tm_dots(size = .5,
+          col= "darkblue") +
+  tm_layout(
+    main.title= "Volcanoes and Seamounts in Relation to Easter Island",
+    main.title.fontfamily = "serif",
+    main.title.fontface = "bold",
+    title.position = c("center", 1.5),
+    outer.bg.color ="beige",
+    legend.outside = TRUE,
+    frame = TRUE,
+    legend.outside.position ="left",
+    main.title.position = "center",
+    bg.color= "white") + 
+  tm_scale_bar(position=c(0.6, .05),
+               text.size = .7) +
+  tm_compass(position = c(.5, .07),
+             size = .8) +
+  tm_add_legend(type ="symbol",
+                labels ="Volcanoes",
+                col ="red",
+                shape = 24,
+                border.col ="black",
+                size = 1) + 
+  tm_add_legend(type ="symbol",
+                labels ="Seamounts",
+                size = 1,
+                col="darkblue",
+                ) +
+  tm_legend(legend.title.fontfamily= "serif",
+             legend.title.fontface= "bold",
+            legend.text.fontfamily= "serif")
+
+```
+
+
+## Part 2:
+
+- Using the ejscreen data provided, create two maps that communicate an environmental justice issue
+- Write a brief paragraph explaining what your maps communicate
+
+```{r, message=FALSE}
 # read in geodatabase of EJScreen data at the Census Block Group level
 ejscreen <- sf::st_read(here::here("data", "ejscreen","EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb")) 
 ```
 
-
-
+### California Data:
 ```{r}
 # filter to a state you are interested in
 california <- ejscreen %>%
-  dplyr::filter(ST_ABBREV == "CA") 
-
-# filter to a county you are interested in
-los_angeles <- ejscreen %>%
-  dplyr::filter(CNTY_NAME %in% c("Los Angeles County"))
+  dplyr::filter(ST_ABBREV == "CA")
 
 # find the average values for all variables within counties
 california_counties <- aggregate(california, by = list(california$CNTY_NAME), FUN = mean)
+
 ```
 
+### Low Income Counties:
 ```{r}
 #Filtering to California counties where the majority of the population is considered low income
 low_income_counties <- california_counties %>%
@@ -47,7 +156,7 @@ low_income_counties <- california_counties %>%
 
 ```
 
-
+### First Map Attempt:
 ```{r}
 #Ground level ozone pollution 
 tm_shape(california_counties) +
@@ -59,65 +168,146 @@ tm_shape(california_counties) +
 ```
 
 
+### Ground-Level Ozone Map:
 ```{r}
-ozone_socal <- tm_shape(california_counties) +
+#Creating the map of ground level ozone pollution in California
+ozone_cal <- tm_shape(california_counties) +
   tm_polygons("OZONE",
-              palette= "YlOrRd",
-              title= "Ozone (ppb)",
-              legend.size.is.portrait = TRUE) +
-   tm_shape(low_income_counties) +
-  tm_borders(col= "darkblue",
-             lwd= 1.2) +
-  tm_compass(position
-             = c("left", "bottom")) +
-    tm_scale_bar(position =
-                   c("left", "bottom")) 
-ozone_socal
-```
-
-```{r}
-wastewater_socal <- tm_shape(california_counties) +
-  tm_polygons("PWDIS",
               palette= "PuBuGn",
-              title= "Wastewater ()",
-              legend.size.is.portrait = TRUE) +
+              title= "Ozone (ppb)") +
+   tm_shape(low_income_counties) +
+  tm_borders(col= "darkblue",
+             lwd= 1.5) +
+  tm_compass(position
+             = c("left", "bottom"),
+             size= 2.0) +
+    tm_scale_bar(position =
+                   c("left", "bottom"),
+                 text.size= 0.8) +
+   tm_add_legend(type= "line",
+                col= "darkblue",
+                size= 0.8,
+                label= "Low-Income County (> 30%)") 
+
+#Show changes 
+ozone_cal
+```
+
+```{r}
+ozone_cal <- ozone_cal +
+  tm_layout(bg.color = "darkseagreen",
+            inner.margins = c(0.02, 0.02, 0.10, 0.02),
+            title= "Ground-Level Ozone(ppb) in California",
+            title.position = c("0.05", "0.95"),
+            title.size= 1.5,
+            title.fontfamily = "serif",
+            title.fontface = "bold",
+            title.color= "darkblue",
+            compass.type= "4star",
+            outer.bg.color = "beige",
+            legend.width = 0.50,
+            legend.height = 0.50,
+            legend.position= c(0.52, 0.54)) +
+  tm_legend(legend.text.color= "white",
+             legend.title.color= "white",
+             legend.title.fontfamily= "serif",
+             legend.title.fontface= "bold",
+             legend.title.size= 1.3,
+             legend.text.size= 0.9,
+             legend.text.fontfamily= "serif") 
+#Show changes
+ozone_cal
+
+```
+
+
+
+### Respiratory Cancer Index Map
+```{r}
+#Creating a map of the respiratory cancer index of each county
+cancer_cal <- tm_shape(california_counties) +
+  tm_polygons("CANCER",
+              palette= "YlOrRd",
+              title= "RCI") +
    tm_shape(low_income_counties) +
   tm_borders(col= "darkblue",
              lwd= 1.2) +
   tm_compass(position
-             = c("left", "bottom")) +
+             = c("left", "bottom"),
+             size= 2.0) +
     tm_scale_bar(position =
-                   c("left", "bottom")) 
-wastewater_socal
+                   c("left", "bottom"),
+                 text.size= 0.8) +
+   tm_add_legend(type= "line",
+                col= "darkblue",
+                size= 0.8,
+                label= "Low-Income County (> 30%)") 
+#Show the changes
+cancer_cal
 ```
 
 
 ```{r}
-ozone_socal +
+#Editing the layout of the cancer_cal map
+cancer_cal <- cancer_cal +
   tm_layout(bg.color = "darkseagreen",
-            main.title= "Ground-Level Ozone Pollution",
-main.title.size= 1.0) +
-  tm_legend( position= c("0.7", "0.7"),
-             legend.text.color= "white",
-             legend.title.color= "white")
+             inner.margins = c(0.02, 0.02, 0.11, 0.07),
+            title= "Respiratory Cancer Index for California",
+            title.size= 1.6,
+            title.position = c("0.05", "0.95"),
+            title.fontfamily = "serif",
+            title.fontface = "bold",
+            title.color= "darkblue",
+            compass.type= "4star",
+            outer.bg.color = "beige",
+            legend.width = 0.50,
+            legend.height = 0.50,
+             legend.position= c(0.55, 0.49)) +
+  tm_legend(legend.text.color= "white",
+             legend.title.color= "white",
+             legend.title.fontfamily= "serif",
+             legend.title.fontface= "bold",
+             legend.title.size= 1.3,
+             legend.text.size= 0.9,
+             legend.text.fontfamily= "serif") 
+
+#Show changes
+cancer_cal 
 ```
+
 
 ```{r}
-wastewater_socal +
-  tm_layout(bg.color = "darkseagreen",
-            main.title= "Ground-Level Ozone Pollution",
-main.title.size= 1.0,
-title.position = c("center", "1.5")) +
-  tm_legend( position= c("0.7", "0.7"),
-             legend.text.color= "white",
-             legend.title.color= "white")
+#View either plots
+ozone_cal
+
+cancer_cal 
 ```
 
-```{r}
-tm_arrange("","")
-```
+### Explanation of plots:
+
+**Map 1** 
+
+- The first map shows the ground-level ozone pollution across low-income counties in California. I defined this as as counties where more than 30% of the households are considered low-income. 
+
+- Although I was disappointed to see that there was no data for coastal counties, we are able to observe an increase in pollution in the Los Angeles area, as well as the generally lower income, industrialized areas of San Bernadino County. As someone who grew up on the border of Los Angeles and San Bernadino County, and who developed asthma and respiratory issues as I got older, I am very familiar with the poor air quality in these regions.
+
+- However, not only is ozone a key indicator of air quality (as it is a non-point source pollutant derived from NOx and VOCs gases emitted by tailpipes and smokestacks), but it is also a driver of large-scale climate change. As photochemical smog is trapped by the Rocky Mountain range and hovers over southern California, it is believed to result in increased ambient air temperatures in the summer, and greater risk of respiratory issues and other human health concerns.
+
+- This map provides insight into which areas are in danger of the aforementioned crisis, and sets the groundwork for the information in map 2.
+
+**Map 2**
+
+- This map affirms the data shown in map 1, where the highly populated, highly polluted counties of Los Angeles suffer from higher risk of respiratory cancer. We also see some of the low-income counties of northern California are at severe risk (specifically Shasta, Butte, Yuba, Sutter, Sacramento, and Yolo). I was born in Yuba City and some of my birth family still resides there, so I once again understand how terrible the air quality can be in highly populated, industrialized areas. 
+
+- In particular, it appears the majority of low-income counties in California are at medium to high risk for contracting respiratory cancer, and the ozone map shows that they many of these counties are also in danger of environmental issues associated with increased ambient air temperature (wildfires, decreased water supply, ecological issues, etc.). Low-income households in particular will likely struggle to pay for the expensive medical services required to fight cancer, and as communities they will likley have less funds to protect or support themselves through ecological disasters and dwindling resources. 
+
+- I think maps like this (at a higher level) could be used to advise local policy makers, or the state government on resource allocation and preparations for future human health crises. 
+
+## Citations:
+
+1.) Yesson C, Clark MR, Taylor M, Rogers AD (2011). The global distribution of seamounts based on 30-second bathymetry data. Deep Sea Research Part I: Oceanographic Research Papers 58: 442-453. doi: 10.1016/j.dsr.2011.02.004. Data URL: http://data.unep-wcmc.org/datasets/41
+
+2.) Pante S, Simon-Bouhet B, Irisson J-O, (2023). marmap: Import, Plot, Analyze Bathymetric and Topographic Data. National Oceanic and Atmopsheric Administration (NOAA), General Bathymetric Chart of the Oceans (GEBCO). doi:	10.32614/CRAN.package.marmap. Data URL: https://github.com/ericpante/marmap
 
 
-
-
-
+3.) (2024) Geodatabase of National EJ Screen Data at the Block Group Level. Environmental Protection Agency (EPA). Data URL: https://www.epa.gov/ejscreen/download-ejscreen-data 
