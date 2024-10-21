@@ -1,7 +1,7 @@
 ---
 title: "EDS223-HW1"
 author: "Maddy Enda"
-date: 10/4/24
+date: 10/4/24 ( updated 10/19/24)
 warning: FALSE
 message: FALSE
 html:
@@ -10,13 +10,13 @@ eval: true
 editor: visual
 editor_options: 
   chunk_output_type: console
-
 ---
+
 # Homework Assignment 1:
 
 ## Part 1:
 
-- Create a map of Easter Island using the data provided
+-   Create a map of Easter Island using the data provided
 
 ### Running our libraries and importing data
 
@@ -32,7 +32,6 @@ library(stars)
 library(RColorBrewer)
 
 ```
-
 
 ```{r}
 #Loading in the data from easterisland folder
@@ -110,13 +109,13 @@ tm_text(text ="elevation",size = .5,xmod = .65,ymod = .06) +
   tm_compass(position = c(.5, .07),
              size = .8) +
   tm_add_legend(type ="symbol",
-                labels ="Volcanoes",
+                labels ="Volcanoes (MASL)",
                 col ="red",
                 shape = 24,
                 border.col ="black",
                 size = 1) + 
   tm_add_legend(type ="symbol",
-                labels ="Seamounts",
+                labels ="Seamounts (MASF)",
                 size = 1,
                 col="darkblue",
                 ) +
@@ -126,11 +125,10 @@ tm_text(text ="elevation",size = .5,xmod = .65,ymod = .06) +
 
 ```
 
-
 ## Part 2:
 
-- Using the ejscreen data provided, create two maps that communicate an environmental justice issue
-- Write a brief paragraph explaining what your maps communicate
+-   Using the ejscreen data provided, create two maps that communicate an environmental justice issue
+-   Write a brief paragraph explaining what your maps communicate
 
 ```{r, message=FALSE}
 # read in geodatabase of EJScreen data at the Census Block Group level
@@ -138,6 +136,7 @@ ejscreen <- sf::st_read(here::here("data", "ejscreen","EJSCREEN_2023_BG_StatePct
 ```
 
 ### California Data:
+
 ```{r}
 # filter to a state you are interested in
 california <- ejscreen %>%
@@ -149,6 +148,7 @@ california_counties <- aggregate(california, by = list(california$CNTY_NAME), FU
 ```
 
 ### Low Income Counties:
+
 ```{r}
 #Filtering to California counties where the majority of the population is considered low income
 low_income_counties <- california_counties %>%
@@ -157,6 +157,7 @@ low_income_counties <- california_counties %>%
 ```
 
 ### First Map Attempt:
+
 ```{r}
 #Ground level ozone pollution 
 tm_shape(california_counties) +
@@ -167,8 +168,8 @@ tm_shape(california_counties) +
              alpha= 1.0) 
 ```
 
-
 ### Ground-Level Ozone Map:
+
 ```{r}
 #Creating the map of ground level ozone pollution in California
 ozone_cal <- tm_shape(california_counties) +
@@ -220,9 +221,8 @@ ozone_cal
 
 ```
 
-
-
 ### Respiratory Cancer Index Map
+
 ```{r}
 #Creating a map of the respiratory cancer index of each county
 cancer_cal <- tm_shape(california_counties) +
@@ -245,7 +245,6 @@ cancer_cal <- tm_shape(california_counties) +
 #Show the changes
 cancer_cal
 ```
-
 
 ```{r}
 #Editing the layout of the cancer_cal map
@@ -275,7 +274,6 @@ cancer_cal <- cancer_cal +
 cancer_cal 
 ```
 
-
 ```{r}
 #View either plots
 ozone_cal
@@ -285,29 +283,28 @@ cancer_cal
 
 ### Explanation of plots:
 
-**Map 1** 
+**Map 1**
 
-- The first map shows the ground-level ozone pollution across low-income counties in California. I defined this as as counties where more than 30% of the households are considered low-income. 
+-   The first map shows the ground-level ozone pollution across low-income counties in California. I defined this as as counties where more than 30% of the households are considered low-income.
 
-- Although I was disappointed to see that there was no data for coastal counties, we are able to observe an increase in pollution in the Los Angeles area, as well as the generally lower income, industrialized areas of San Bernadino County. As someone who grew up on the border of Los Angeles and San Bernadino County, and who developed asthma and respiratory issues as I got older, I am very familiar with the poor air quality in these regions.
+-   Although I was disappointed to see that there was no data for coastal counties, we are able to observe an increase in pollution in the Los Angeles area, as well as the generally lower income, industrialized areas of San Bernadino County. As someone who grew up on the border of Los Angeles and San Bernadino County, and who developed asthma and respiratory issues as I got older, I am very familiar with the poor air quality in these regions.
 
-- However, not only is ozone a key indicator of air quality (as it is a non-point source pollutant derived from NOx and VOCs gases emitted by tailpipes and smokestacks), but it is also a driver of large-scale climate change. As photochemical smog is trapped by the Rocky Mountain range and hovers over southern California, it is believed to result in increased ambient air temperatures in the summer, and greater risk of respiratory issues and other human health concerns.
+-   However, not only is ozone a key indicator of air quality (as it is a non-point source pollutant derived from NOx and VOCs gases emitted by tailpipes and smokestacks), but it is also a driver of large-scale climate change. As photochemical smog is trapped by the Rocky Mountain range and hovers over southern California, it is believed to result in increased ambient air temperatures in the summer, and greater risk of respiratory issues and other human health concerns.
 
-- This map provides insight into which areas are in danger of the aforementioned crisis, and sets the groundwork for the information in map 2.
+-   This map provides insight into which areas are in danger of the aforementioned crisis, and sets the groundwork for the information in map 2.
 
 **Map 2**
 
-- This map affirms the data shown in map 1, where the highly populated, highly polluted counties of Los Angeles suffer from higher risk of respiratory cancer. We also see some of the low-income counties of northern California are at severe risk (specifically Shasta, Butte, Yuba, Sutter, Sacramento, and Yolo). I was born in Yuba City and some of my birth family still resides there, so I once again understand how terrible the air quality can be in highly populated, industrialized areas. 
+-   This map affirms the data shown in map 1, where the highly populated, highly polluted counties of Los Angeles suffer from higher risk of respiratory cancer. We also see some of the low-income counties of northern California are at severe risk (specifically Shasta, Butte, Yuba, Sutter, Sacramento, and Yolo). I was born in Yuba City and some of my birth family still resides there, so I once again understand how terrible the air quality can be in highly populated, industrialized areas.
 
-- In particular, it appears the majority of low-income counties in California are at medium to high risk for contracting respiratory cancer, and the ozone map shows that they many of these counties are also in danger of environmental issues associated with increased ambient air temperature (wildfires, decreased water supply, ecological issues, etc.). Low-income households in particular will likely struggle to pay for the expensive medical services required to fight cancer, and as communities they will likley have less funds to protect or support themselves through ecological disasters and dwindling resources. 
+-   In particular, it appears the majority of low-income counties in California are at medium to high risk for contracting respiratory cancer, and the ozone map shows that they many of these counties are also in danger of environmental issues associated with increased ambient air temperature (wildfires, decreased water supply, ecological issues, etc.). Low-income households in particular will likely struggle to pay for the expensive medical services required to fight cancer, and as communities they will likley have less funds to protect or support themselves through ecological disasters and dwindling resources.
 
-- I think maps like this (at a higher level) could be used to advise local policy makers, or the state government on resource allocation and preparations for future human health crises. 
+-   I think maps like this (at a higher level) could be used to advise local policy makers, or the state government on resource allocation and preparations for future human health crises.
 
 ## Citations:
 
 1.) Yesson C, Clark MR, Taylor M, Rogers AD (2011). The global distribution of seamounts based on 30-second bathymetry data. Deep Sea Research Part I: Oceanographic Research Papers 58: 442-453. doi: 10.1016/j.dsr.2011.02.004. Data URL: http://data.unep-wcmc.org/datasets/41
 
-2.) Pante S, Simon-Bouhet B, Irisson J-O, (2023). marmap: Import, Plot, Analyze Bathymetric and Topographic Data. National Oceanic and Atmopsheric Administration (NOAA), General Bathymetric Chart of the Oceans (GEBCO). doi:	10.32614/CRAN.package.marmap. Data URL: https://github.com/ericpante/marmap
+2.) Pante S, Simon-Bouhet B, Irisson J-O, (2023). marmap: Import, Plot, Analyze Bathymetric and Topographic Data. National Oceanic and Atmopsheric Administration (NOAA), General Bathymetric Chart of the Oceans (GEBCO). doi: 10.32614/CRAN.package.marmap. Data URL: https://github.com/ericpante/marmap
 
-
-3.) (2024) Geodatabase of National EJ Screen Data at the Block Group Level. Environmental Protection Agency (EPA). Data URL: https://www.epa.gov/ejscreen/download-ejscreen-data 
+3.) (2024) Geodatabase of National EJ Screen Data at the Block Group Level. Environmental Protection Agency (EPA). Data URL: https://www.epa.gov/ejscreen/download-ejscreen-data
